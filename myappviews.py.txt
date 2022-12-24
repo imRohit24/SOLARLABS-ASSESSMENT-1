@@ -1,0 +1,34 @@
+from django.shortcuts import render
+from django.http import JsonResponse
+from bs4 import BeautifulSoup
+import requests
+
+def country_info(request, country_name):
+    # Construct the Wikipedia URL for the given country name
+    wikipedia_url = f"https://en.wikipedia.org/wiki/{country_name}"
+
+    # Scrape the infobox on the right side of the Wikipedia page
+    response = requests.get(wikipedia_url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    infobox = soup.find("table", class_="infobox geography vcard")
+
+    # Extract the relevant information from the infobox
+    flag_link = infobox.find("img", class_="image")['src']
+    capital = infobox.find("th", string="Capital").parent.td.text.strip()
+    largest_city = infobox.find("th", string="Largest city").parent.td.text.strip()
+    official_languages = infobox.find("th", string="Official languages").parent.td.text.strip()
+    area_total = infobox.find("th", string="Total").parent.td.text.strip()
+    population = infobox.find("th", string="Population").parent.td.text.strip()
+    gdp_nominal = infobox.find("th", string="GDP (nominal)").parent.td.text.strip()
+
+    # Return the extracted information as a JSON response
+    data = {
+        'flag_link': flag_link,
+        'capital': capital,
+        'largest_city': largest_city,
+        'official_languages': official_languages,
+        'area_total': area_total,
+        'population': population,
+        'gdp_nominal': gdp_nominal,
+    }
+    return JsonResponse(data)
